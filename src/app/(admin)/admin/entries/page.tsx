@@ -1,15 +1,29 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-export default async function EntriesPage() {
+export default async function EntriesPage({ searchParams }: { searchParams: Promise<{ q?: string, status?: string }> }) {
   const supabase = await createClient()
+  const params = await searchParams
   
-  // Fetch entries with supplier info
-  const { data: entries } = await supabase
+  const query = params.q || ''
+  const statusFilter = params.status || ''
+  
+  let dbQuery = supabase
     .from('purchase_entries')
-    .select('*, suppliers(business_name)')
+    .select('*, suppliers!inner(business_name)')
     .order('created_at', { ascending: false })
+
+  if (query) {
+    dbQuery = dbQuery.or(`invoice_number.ilike.%${query}%,suppliers.business_name.ilike.%${query}%`)
+  }
+
+  if (statusFilter) {
+    dbQuery = dbQuery.eq('status', statusFilter)
+  }
+
+  const { data: entries } = await dbQuery
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
@@ -18,6 +32,31 @@ export default async function EntriesPage() {
         <Button asChild>
           <Link href="/admin/entries/new">New Entry</Link>
         </Button>
+      </div>
+
+      <div className="bg-zinc-900 rounded-lg shadow overflow-hidden mb-6 p-4">
+        <form className="flex gap-4 items-end" action="/admin/entries" method="GET">
+          <div className="flex-1 space-y-1">
+            <label className="text-xs font-semibold text-zinc-400 uppercase">Search</label>
+            <Input name="q" defaultValue={query} placeholder="Search by Invoice or Supplier..." className="bg-black" />
+          </div>
+          <div className="w-48 space-y-1">
+            <label className="text-xs font-semibold text-zinc-400 uppercase">Status</label>
+            <select name="status" defaultValue={statusFilter} className="flex h-10 w-full rounded-md border border-input bg-black px-3 py-2 text-sm">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="partially_approved">Partially Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+          <Button type="submit" variant="secondary">Filter</Button>
+          {(query || statusFilter) && (
+             <Button asChild variant="outline">
+               <Link href="/admin/entries">Clear</Link>
+             </Button>
+          )}
+        </form>
       </div>
 
       <div className="bg-zinc-900 rounded-lg shadow overflow-hidden">

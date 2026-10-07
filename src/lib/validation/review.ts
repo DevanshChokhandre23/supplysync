@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const reviewItemSchema = z.object({
   item_id: z.string().uuid(),
   quantity_approved: z.coerce.number().min(0),
-  shortfall_resolution: z.enum(['pending_redelivery', 'short_closed', 'credit_note', '']).optional()
+  shortfall_resolution: z.enum(['pending_redelivery', 'short_closed', '']).optional()
 })
 
 export const reviewSchema = z.object({

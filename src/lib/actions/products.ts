@@ -22,8 +22,6 @@ export async function createProduct(data: ProductFormValues) {
     p_name: parsed.data.name,
     p_sku: parsed.data.sku || null,
     p_base_uom: parsed.data.base_uom,
-    p_default_tax_rate: parsed.data.default_tax_rate,
-    p_hsn_code: parsed.data.hsn_code || null,
     p_actor_id: user.id
   })
 

@@ -126,12 +126,8 @@ export default async function SupplierDashboardPage({ params }: { params: Promis
               <p className="text-sm">{supplier.contact_phone || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-400 uppercase font-semibold">Tax ID</p>
-              <p className="text-sm">{supplier.tax_id || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-zinc-400 uppercase font-semibold">Payment Terms</p>
-              <p className="text-sm">{supplier.payment_terms || 'N/A'}</p>
+              <p className="text-xs text-zinc-400 uppercase font-semibold">Address</p>
+              <p className="text-sm">{supplier.address || 'N/A'}</p>
             </div>
           </div>
         </div>

@@ -22,15 +22,12 @@ export async function createSupplier(data: SupplierFormValues) {
     return { ok: false, error: 'Invalid data provided' }
   }
 
-  // 3. Execute transactional RPC
   const { data: newSupplierId, error } = await supabase.rpc('create_supplier_with_audit', {
     p_user_id: null,
     p_business_name: parsed.data.business_name,
     p_contact_name: parsed.data.contact_name || null,
     p_phone: parsed.data.phone,
-    p_gst_number: parsed.data.gst_number || null,
     p_address: parsed.data.address || null,
-    p_payment_terms_days: parsed.data.payment_terms_days,
     p_actor_id: user.id,
   })
 

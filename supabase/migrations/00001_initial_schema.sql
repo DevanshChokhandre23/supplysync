@@ -5,7 +5,7 @@ CREATE TYPE supplier_status AS ENUM ('active', 'inactive');
 CREATE TYPE product_status AS ENUM ('active', 'inactive');
 CREATE TYPE entry_source AS ENUM ('admin', 'staff', 'supplier');
 CREATE TYPE entry_status AS ENUM ('draft', 'pending', 'approved', 'partially_approved', 'rejected', 'cancelled', 'voided');
-CREATE TYPE shortfall_resolution AS ENUM ('pending_redelivery', 'short_closed', 'credit_note');
+CREATE TYPE shortfall_resolution AS ENUM ('pending_redelivery', 'short_closed');
 CREATE TYPE approval_decision AS ENUM ('approved', 'partial', 'rejected');
 CREATE TYPE attachment_kind AS ENUM ('invoice', 'challan', 'photo');
 CREATE TYPE audit_action AS ENUM ('create', 'update', 'approve', 'reject', 'void', 'login');
@@ -43,10 +43,7 @@ CREATE TABLE suppliers (
     business_name text NOT NULL,
     contact_name text,
     phone text NOT NULL,
-    gst_number text CHECK (char_length(gst_number) = 15),
     address text,
-    bank_details jsonb,
-    payment_terms_days int DEFAULT 0,
     status supplier_status DEFAULT 'active',
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
@@ -62,8 +59,6 @@ CREATE TABLE products (
     name text NOT NULL,
     sku text UNIQUE,
     base_uom text NOT NULL,
-    default_tax_rate numeric(5,2),
-    hsn_code text,
     status product_status DEFAULT 'active',
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
@@ -81,7 +76,6 @@ CREATE TABLE supplier_products (
     supplier_item_name text,
     purchase_uom text,
     conversion_factor numeric(14,4),
-    agreed_unit_price numeric(14,2),
     effective_from date,
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),

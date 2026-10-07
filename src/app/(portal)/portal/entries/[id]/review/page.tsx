@@ -172,7 +172,6 @@ export default function ReviewEntryPage() {
                             <option value="">Select resolution...</option>
                             <option value="pending_redelivery">Pending Redelivery</option>
                             <option value="short_closed">Short Closed</option>
-                            <option value="credit_note">Credit Note (Status)</option>
                           </select>
                         ) : (
                           <span className="text-zinc-500 text-xs italic">N/A</span>
