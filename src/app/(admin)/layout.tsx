@@ -71,6 +71,20 @@ export default async function AdminLayout({
               )}
             </ul>
           </div>
+          
+          <div className="p-4 border-t border-zinc-800">
+            <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4">Management</h2>
+            <ul className="space-y-1">
+              <li>
+                <Link 
+                  href="/admin/users/new"
+                  className="flex items-center px-3 py-2 text-sm text-zinc-300 rounded-md hover:bg-zinc-800 hover:text-emerald-400 transition-colors"
+                >
+                  Invite User
+                </Link>
+              </li>
+            </ul>
+          </div>
         </aside>
 
         {/* Main Content */}
