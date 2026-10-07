@@ -1,10 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 
 export function createAdminClient() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_STORAGE_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.STORAGE_SUPABASE_SERVICE_ROLE_KEY
+
+  if (!url) {
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL')
   }
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (!serviceKey) {
     throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY. This is required for admin operations like inviting users.')
   }
 
@@ -12,8 +15,8 @@ export function createAdminClient() {
   // is meant for session-based user authentication, while this is meant for 
   // system-level admin bypass operations.
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    url,
+    serviceKey,
     {
       auth: {
         autoRefreshToken: false,
