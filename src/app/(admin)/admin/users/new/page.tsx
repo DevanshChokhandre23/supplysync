@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { inviteUser } from '@/lib/actions/users'
+import { inviteUser, checkEmailExists } from '@/lib/actions/users'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { z } from 'zod'
 
 export default function InviteUserPage() {
   const router = useRouter()
@@ -13,8 +14,51 @@ export default function InviteUserPage() {
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // Live email validation states
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState('')
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false)
+
+  useEffect(() => {
+    // Level 1: Live Format Validation
+    if (!email) {
+      setEmailError('')
+      return
+    }
+
+    const emailSchema = z.string().email()
+    const result = emailSchema.safeParse(email)
+    
+    if (!result.success) {
+      setEmailError('Please enter a valid email address.')
+      return
+    }
+
+    // Level 2: Live Duplicate Checking (Debounced)
+    setEmailError('')
+    setIsCheckingEmail(true)
+
+    const timer = setTimeout(async () => {
+      try {
+        const exists = await checkEmailExists(email)
+        if (exists) {
+          setEmailError('This email is already registered in the system.')
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setIsCheckingEmail(false)
+      }
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(timer)
+  }, [email])
+
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (emailError) return; // Prevent submission if email is invalid
+
     setError('')
     setSuccess('')
     setLoading(true)
@@ -27,6 +71,7 @@ export default function InviteUserPage() {
     } else {
       setSuccess(result.message || 'Invite sent successfully!')
       e.currentTarget.reset()
+      setEmail('')
     }
     
     setLoading(false)
@@ -47,15 +92,21 @@ export default function InviteUserPage() {
       <div className="bg-zinc-900 rounded-lg p-6 shadow-md border border-zinc-800">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
+            <div className="flex justify-between">
+              <Label htmlFor="email">Email Address</Label>
+              {isCheckingEmail && <span className="text-xs text-zinc-500 animate-pulse">Checking database...</span>}
+            </div>
             <Input 
               id="email" 
               name="email" 
               type="email" 
               placeholder="supplier@company.com" 
               required 
-              className="bg-black"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={`bg-black ${emailError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
             />
+            {emailError && <p className="text-sm text-red-500 mt-1 font-medium">{emailError}</p>}
           </div>
 
           <div className="space-y-2">
@@ -85,7 +136,7 @@ export default function InviteUserPage() {
           </div>
 
           <div className="pt-4 border-t border-zinc-800">
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button type="submit" disabled={loading || !!emailError || isCheckingEmail} className="w-full">
               {loading ? 'Sending Invite...' : 'Send Email Invitation'}
             </Button>
           </div>
