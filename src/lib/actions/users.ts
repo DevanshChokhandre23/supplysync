@@ -10,6 +10,26 @@ const inviteUserSchema = z.object({
   role: z.enum(['admin', 'staff', 'supplier']),
 })
 
+export async function checkEmailExists(email: string) {
+  if (!email || !email.includes('@')) return false;
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false;
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', email)
+    .single()
+
+  if (error && error.code !== 'PGRST116') { // PGRST116 is "No rows found"
+    console.error("Check email error:", error)
+  }
+
+  return !!data;
+}
+
 export async function inviteUser(formData: FormData) {
   const supabase = await createClient()
   
@@ -56,20 +76,17 @@ export async function inviteUser(formData: FormData) {
       return { ok: false, error: 'Failed to create user account.' }
     }
 
-    // 5. Insert into public.users table using the returned user ID
-    // We use the admin client again to bypass RLS, because the invited user
-    // doesn't have an active session yet and our normal client is bound to the current Admin user.
-    // Wait, the normal client bounded to Admin CAN insert if RLS allows Admins to insert.
-    // Let's use the adminAuthClient to be 100% safe against strict RLS.
+    // We use the admin client to UPDATE the row because the database automatically
+    // created a blank row for them via a trigger (00003_auth_sync.sql).
     const { error: dbError } = await adminAuthClient
       .from('users')
-      .insert({
-        id: inviteData.user.id,
+      .update({
         email: parsed.data.email,
         full_name: parsed.data.full_name,
         role: parsed.data.role,
         status: 'active'
       })
+      .eq('id', inviteData.user.id)
 
     if (dbError) {
       // Cleanup auth user if db insertion fails to avoid orphaned records
